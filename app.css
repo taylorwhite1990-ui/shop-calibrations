@@ -186,3 +186,8 @@ h1, h2, p { margin: 0; }
 .center { text-align: center; align-self: center; }
 .link-btn:disabled, .btn:disabled { opacity: .5; }
 .toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1f2a37; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 5; max-width: calc(100% - 32px); text-align: center; }
+
+/* ----- the app's name and logo (open and login screens) ----- */
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand-logo { width: 64px; height: 64px; flex-shrink: 0; }
+.hero h1.brand-name { display: flex; flex-direction: column; font-size: 24px; line-height: 1.1; letter-spacing: .01em; }

@@ -1,5 +1,5 @@
-// Shop Floor Calibrations: the phone side of Check Out to Phones.
-// Open a check-out file, log in with a Phone PIN, browse the tools, calibrate
+// Calibration Management System, mobile app: the device side of Mobile Devices > Check Out to Mobile.
+// Open a check-out file, log in with a Mobile PIN, browse the tools, calibrate
 // them (or add custom entries), and send the results back to the desktop.
 //
 // - The file is kept on the phone still locked. After the PIN, the inspector
@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a5";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a6";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -102,7 +102,7 @@
     return new Date().toISOString().replace(/\.\d+Z$/, "Z");
   }
 
-  // ---------- the work done on this phone ----------
+  // ---------- the work done on this device ----------
   function workInfo() {
     try { return JSON.parse(load(STORE_WORK_INFO) || "null"); } catch (e) { return null; }
   }
@@ -130,7 +130,7 @@
     const text = await CalCheck.lockWork(state.key, state.header.session, state.work);
     const ok = save(STORE_WORK, text) &&
       save(STORE_WORK_INFO, JSON.stringify({ session: state.header.session, total: state.work.entries.length, unsent }));
-    if (!ok) alert("The phone wouldn't save this (is it full?). Free some space and save again.");
+    if (!ok) alert("The device wouldn't save this (is it full?). Free some space and save again.");
     return ok;
   }
 
@@ -139,7 +139,7 @@
       .sort((a, b) => b.date.localeCompare(a.date) || b.saved_at.localeCompare(a.saved_at));
   }
 
-  // A tool as it stands with this phone's entries: the newest entry decides
+  // A tool as it stands with this device's entries: the newest entry decides
   // its due date (as on the desktop), a custom entry can change its status
   function current(tool) {
     const mine = entriesFor(tool.tool_id);
@@ -182,8 +182,8 @@
   function confirmRemove(header) {
     const unsent = unsentFor(header.session);
     return confirm(unsent
-      ? `${plural(unsent, "result")} on this phone haven't been sent and will be lost.\n\nRemove the file and the results anyway?`
-      : "Remove the check-out file (and the results already sent) from this phone?");
+      ? `${plural(unsent, "result")} on this device haven't been sent and will be lost.\n\nRemove the file and the results anyway?`
+      : "Remove the check-out file (and the results already sent) from this device?");
   }
 
   // ---------- staying logged in until midnight ----------
@@ -262,10 +262,10 @@
           const header = CalCheck.readHeader(text);
           const old = storedHeader();
           if (old && old.session !== header.session && unsentFor(old.session))
-            throw new Error(`${plural(unsentFor(old.session), "result")} from the file on this phone haven't been sent. ` +
+            throw new Error(`${plural(unsentFor(old.session), "result")} from the file on this device haven't been sent. ` +
                             "Log in and use Send Results first (or remove that file to throw them away).");
           if (CalCheck.isExpired(header)) throw new Error(`That file expired on ${Dates.displayMoment(header.expires)}. Ask for a new one.`);
-          if (!save(STORE_FILE, text)) throw new Error("The phone wouldn't keep the file (is it in private browsing, or full?).");
+          if (!save(STORE_FILE, text)) throw new Error("The device wouldn't keep the file (is it in private browsing, or full?).");
           forget(STORE_TRIES);
           forgetLogin();
           after(null);
@@ -279,6 +279,16 @@
     setTimeout(() => input.remove(), 60000);
   }
 
+  // The blue band on the open and login screens: the app's white caliper on
+  // the left, its name stacked on the right (as on the desktop's login)
+  function brandHero(subtitle) {
+    return h("div", { class: "hero" },
+      h("div", { class: "brand" },
+        h("img", { src: "mobile-logo.png", alt: "", class: "brand-logo" }),
+        h("h1", { class: "brand-name" }, h("span", {}, "Calibration"), h("span", {}, "Management"), h("span", {}, "System"))),
+      subtitle ? h("p", {}, subtitle) : null);
+  }
+
   function versionLine() {
     return h("p", { class: "version" }, `Version ${APP_VERSION}`);
   }
@@ -287,18 +297,15 @@
     const header = storedHeader();
     if (header && CalCheck.isExpired(header) && !unsentFor(header.session)) {
       removeFile();
-      return openScreen(`The check-out file expired on ${Dates.displayMoment(header.expires)} and was removed from this phone. Ask for a new one.`);
+      return openScreen(`The check-out file expired on ${Dates.displayMoment(header.expires)} and was removed from this device. Ask for a new one.`);
     }
     if (header) return loginScreen(header, problem);
 
     show(h("div", { class: "screen" },
-      h("div", { class: "hero" },
-        icon("tool", 40),
-        h("h1", {}, "Shop Floor Calibrations"),
-        h("p", {}, "Works offline · nothing is kept until you open a check-out file")),
+      brandHero("Works offline · nothing is kept until you open a check-out file"),
       h("div", { class: "panel" },
         h("h2", {}, "Open the check-out file you were emailed"),
-        h("p", { class: "small" }, "Save the email's attachment to your phone (Files or Downloads) first, then pick it here."),
+        h("p", { class: "small" }, "Save the email's attachment to your device (Files or Downloads) first, then pick it here."),
         h("button", { class: "pick-file", onclick: () => chooseFile(openScreen) }, icon("file", 20), "Choose File"),
         problem && h("div", { class: "note bad", role: "alert" }, problem)),
       versionLine()));
@@ -325,7 +332,7 @@
       const wait = waitLeft();
       if (wait) return say(`Too many wrong PINs. Try again in ${wait} seconds.`);
       if (!select.value) return say("Choose your name first.");
-      if (!pin.value) return say("Enter your Phone PIN.");
+      if (!pin.value) return say("Enter your Mobile PIN.");
       go.disabled = true;
       go.textContent = "Unlocking...";
       try {
@@ -349,25 +356,24 @@
       expired
         ? h("div", { class: "note bad" },
             h("b", {}, "This check-out file has expired"),
-            h("span", {}, `${plural(unsent, "result")} on this phone haven't been sent. Log in and use Send Results.`))
+            h("span", {}, `${plural(unsent, "result")} on this device haven't been sent. Log in and use Send Results.`))
         : h("div", { class: "note ok" },
-            h("b", {}, "Check-out file on this phone"),
+            h("b", {}, "Check-out file on this device"),
             h("span", {}, `${plural(header.tool_count, "tool")} · checked out by ${header.checked_out_by}`),
             h("span", { class: "small" }, `Expires ${Dates.displayMoment(header.expires)} · ${header.session}`),
             unsent ? h("span", { class: "small" }, `${plural(unsent, "result")} not sent yet`) : null),
       h("label", { class: "field", for: "who" }, "Your name", select),
-      h("label", { class: "field", for: "pin" }, "Phone PIN", pin),
+      h("label", { class: "field", for: "pin" }, "Mobile PIN", pin),
       message,
       go,
       h("button", { type: "button", class: "link-btn", onclick: () => chooseFile(err => err ? say(err) : openScreen()) },
         "Open a different file"),
       h("button", { type: "button", class: "link-btn danger", onclick: () => {
         if (confirmRemove(header)) { removeFile(); openScreen(); }
-      } }, "Remove the file from this phone"));
+      } }, "Remove the file from this device"));
 
     show(h("div", { class: "screen" },
-      h("div", { class: "hero" }, icon("tool", 40), h("h1", {}, "Shop Floor Calibrations"),
-        h("p", {}, "Log in with your Phone PIN")),
+      brandHero("Log in with your Mobile PIN"),
       form,
       versionLine()));
     (select.value ? pin : select).focus();
@@ -419,7 +425,7 @@
         h("button", { onclick: () => lockAndLeave(true) }, "Switch User"),
         h("button", { onclick: () => lockAndLeave(false) }, "Lock")),
       entries.length ? h("button", { class: "send-strip", onclick: () => go("#/send") },
-        h("span", {}, `${plural(entries.length, "entry", "entries")} on this phone`,
+        h("span", {}, `${plural(entries.length, "entry", "entries")} on this device`,
           unsent ? h("b", { class: "unsent" }, ` · ${unsent} not sent`) : " · all sent"),
         h("span", { class: "send-link" }, "Send Results", icon("chev", 14))) : null,
     ];
@@ -520,11 +526,11 @@
                                     (state.data.tools.find(t => t.tool_id === e.tool_id) || { name: "" }).name.toLowerCase().includes(text));
       const failed = all.filter(e => entryResult(e) === "Fail").length;
       const unsent = all.filter(e => !e.sent_at).length;
-      summary.replaceChildren(`On this phone · ${plural(all.length, "entry", "entries")}`,
+      summary.replaceChildren(`On this device · ${plural(all.length, "entry", "entries")}`,
         failed ? h("span", { class: "fail-text" }, ` · ${failed} failed`) : "",
         unsent ? ` · ${unsent} not sent` : (all.length ? " · all sent" : ""));
       list.replaceChildren(...shown.map(e => entryLine(e, { withTool: true })));
-      if (!shown.length) list.append(h("p", { class: "empty" }, all.length ? "No entries match your search" : "Nothing calibrated on this phone yet"));
+      if (!shown.length) list.append(h("p", { class: "empty" }, all.length ? "No entries match your search" : "Nothing calibrated on this device yet"));
     }
     fill();
     show(h("div", { class: "screen" },
@@ -559,7 +565,7 @@
         h("section", { class: `due-card ${sev}` }, h("span", { class: `dot ${sev}` }),
           tool.due_date ? h("span", {}, h("b", {}, `Due ${Dates.display(tool.due_date)}`), ` · ${Dates.whenText(tool.due_date).replace(/^Due /, "")}`)
                         : h("span", {}, "No due date")),
-        mine.length ? [h("h2", {}, "On this phone"), h("section", { class: "card entries" }, mine.map(e => entryLine(e)))] : null,
+        mine.length ? [h("h2", {}, "On this device"), h("section", { class: "card entries" }, mine.map(e => entryLine(e)))] : null,
         h("section", { class: "card facts" },
           fact("Location / Technician", tool.location),
           fact("Interval", tool.interval),
@@ -634,7 +640,7 @@
   }
 
   async function deleteEntry(entry) {
-    if (!confirm("Delete this entry from the phone?")) return;
+    if (!confirm("Delete this entry from this device?")) return;
     state.work.entries = state.work.entries.filter(e => e !== entry);
     if (await saveWork()) {
       state.formHash = null;
@@ -776,7 +782,7 @@
         saved_at: entry ? entry.saved_at : nowIso(), changed_at: entry ? nowIso() : null, sent_at: null,
       };
       if (await storeEntry(record, entry)) {
-        toast(entry ? "Changes saved on this phone" : "Calibration saved on this phone");
+        toast(entry ? "Changes saved on this device" : "Calibration saved on this device");
         history.back();
       }
     }
@@ -794,7 +800,7 @@
         h("div", { class: "pair" }, editRanges, allPass || h("span", {})),
         entry ? h("button", { type: "button", class: "link-btn danger", onclick: () => deleteEntry(entry) }, "Delete this entry") : null),
       h("div", { class: "actions single" },
-        h("button", { class: "btn", onclick: saveCalibration }, entry ? "Save Changes" : "Save on this phone"))));
+        h("button", { class: "btn", onclick: saveCalibration }, entry ? "Save Changes" : "Save on this device"))));
   }
 
   function customScreen(original, entry) {
@@ -838,7 +844,7 @@
         saved_at: entry ? entry.saved_at : nowIso(), changed_at: entry ? nowIso() : null, sent_at: null,
       };
       if (await storeEntry(record, entry)) {
-        toast(entry ? "Changes saved on this phone" : "Entry saved on this phone");
+        toast(entry ? "Changes saved on this device" : "Entry saved on this device");
         history.back();
       }
     }
@@ -924,7 +930,7 @@
           await markSent("shared");
         } catch (e) {
           if (e.name !== "AbortError")
-            message.replaceChildren(h("div", { class: "note bad" }, "The phone couldn't share the file. Use Save File instead, then attach it to an email."));
+            message.replaceChildren(h("div", { class: "note bad" }, "The device couldn't share the file. Use Save File instead, then attach it to an email."));
         }
         return;
       }
@@ -959,7 +965,7 @@
             : lastSend ? `Everything was sent at ${timeText(lastSend.at)}. Sending again is safe: the desktop adds each entry once.` : "")),
         h("button", { class: "btn wide", disabled: !entries.length, onclick: share }, icon("mail", 20), "Email Results"),
         h("button", { class: "link-btn center", disabled: !entries.length, onclick: () => saveFile() }, "Save File instead"),
-        h("p", { class: "small center" }, "Opens your phone's share sheet with the file attached. Your entries stay on this phone until the file is removed."))));
+        h("p", { class: "small center" }, "Opens your device's share sheet with the file attached. Your entries stay on this device until the file is removed."))));
   }
 
   // ---------- moving between screens (the phone's back button works) ----------
@@ -980,7 +986,7 @@
     state.expired = CalCheck.isExpired(state.header);
     if (state.expired && !state.work.entries.some(e => !e.sent_at)) {
       removeFile();
-      return openScreen("The check-out file has expired and was removed from this phone. Ask for a new one.");
+      return openScreen("The check-out file has expired and was removed from this device. Ask for a new one.");
     }
     const hash = location.hash;
     const part = prefix => decodeURIComponent(hash.slice(prefix.length));
@@ -1005,7 +1011,7 @@
   });
 
   if (!window.crypto || !crypto.subtle) {
-    show(h("div", { class: "screen" }, h("div", { class: "hero" }, h("h1", {}, "Shop Floor Calibrations")),
+    show(h("div", { class: "screen" }, brandHero(),
       h("div", { class: "panel" }, h("div", { class: "note bad" }, "This browser can't unlock check-out files. Open the app's https:// link in Safari or Chrome."))));
     return;
   }

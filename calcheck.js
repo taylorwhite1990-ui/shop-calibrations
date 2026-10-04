@@ -30,7 +30,7 @@ const CalCheck = (() => {
     let header;
     try { header = JSON.parse(text); } catch (e) { throw new Error("That isn't a check-out file."); }
     if (!header || header.format !== FORMAT) throw new Error("That isn't a check-out file.");
-    if (header.version !== VERSION) throw new Error("This check-out file needs a newer version of the phone app. Reload the app while online.");
+    if (header.version !== VERSION) throw new Error("This check-out file needs a newer version of the mobile app. Reload the app while online.");
     if (!Array.isArray(header.inspectors) || !header.inspectors.length) throw new Error("The file is damaged.");
     return header;
   }
