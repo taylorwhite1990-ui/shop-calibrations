@@ -27,6 +27,13 @@ const Rules = (() => {
     return Math.abs(reading - nominal) > deviation + 1e-9 ? "fail" : "pass";
   }
 
+  // The automatic Pass / Fail for a range: the After Adj. reading decides when
+  // there is one (the tool was adjusted to read correctly), else the As Found
+  function calibrationResult(nominalText, asFoundText, afterAdjText, deviation) {
+    if (parseMeasurement(afterAdjText) !== null) return toleranceResult(nominalText, afterAdjText, deviation);
+    return toleranceResult(nominalText, asFoundText, deviation);
+  }
+
   function outOfTolerance(nominalText, readingText, deviation) {
     return toleranceResult(nominalText, readingText, deviation) === "fail";
   }
@@ -107,6 +114,6 @@ const Rules = (() => {
     return iso(new Date());
   }
 
-  return { parseMeasurement, parseDeviation, toleranceResult, outOfTolerance, addInchMark, splitLeadingResult,
+  return { parseMeasurement, parseDeviation, toleranceResult, calibrationResult, outOfTolerance, addInchMark, splitLeadingResult,
            remarksForResult, intervalIsNever, dueFromInterval, parseIso, today };
 })();

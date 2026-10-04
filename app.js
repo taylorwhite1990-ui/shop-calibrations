@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a6";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a7";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -701,10 +701,11 @@
         setResult(row.result === value ? "none" : value);
       }
 
-      // Pass / Fail chosen from the As Found reading until someone picks one themselves
+      // Pass / Fail chosen from the readings until someone picks one themselves: the After Adj.
+      // reading when there is one (adjusted back into tolerance = Pass), else the As Found
       function autoResult() {
         if (auto.byHand) return;
-        const verdict = Rules.toleranceResult(rangeIn.value, found.value, deviation);
+        const verdict = Rules.calibrationResult(rangeIn.value, found.value, adj.value, deviation);
         if (verdict === null) {
           if (auto.value && row.result === auto.value) setResult("none");
           auto.value = null;
@@ -726,7 +727,7 @@
       pass.addEventListener("click", () => choose("pass"));
       fail.addEventListener("click", () => choose("fail"));
       found.addEventListener("input", () => { autoResult(); checkTolerance(); });
-      adj.addEventListener("input", checkTolerance);
+      adj.addEventListener("input", () => { autoResult(); checkTolerance(); });
       rangeIn.addEventListener("input", () => { autoResult(); checkTolerance(); });
       for (const [box, key] of [[found, "as_found"], [adj, "after_adj"]])     // 1.000 -> 1.000" (typed now only)
         box.addEventListener("blur", () => { if (box.value !== saved[key]) box.value = Rules.addInchMark(box.value, rangeIn.value); });
