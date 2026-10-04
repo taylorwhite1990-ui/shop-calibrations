@@ -79,5 +79,59 @@ const CalCheck = (() => {
     return JSON.parse(new TextDecoder().decode(plain));
   }
 
-  return { readHeader, isExpired, open, unlock, reopen };
+  function b64(bytes) {
+    let bin = "";
+    const view = new Uint8Array(bytes);
+    for (let i = 0; i < view.length; i += 0x8000) bin += String.fromCharCode.apply(null, view.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+
+  function randomHex(bytes) {
+    return Array.from(crypto.getRandomValues(new Uint8Array(bytes)), b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function seal(key, value, aad) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(aad) },
+                                             key, enc.encode(JSON.stringify(value)));
+    return { iv: b64(iv), data: b64(data) };
+  }
+
+  async function unseal(key, sealed, aad) {
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(sealed.iv), additionalData: enc.encode(aad) },
+                                              key, unb64(sealed.data));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  // ---------- the work done on the phone, kept on it locked with the file's key ----------
+  function lockWork(key, session, work) {
+    return seal(key, work, `calcheck-work|${session}`).then(s => JSON.stringify({ session, ...s }));
+  }
+
+  async function unlockWork(key, session, text) {
+    const stored = JSON.parse(text);
+    if (stored.session !== session) throw new Error("other session");
+    return unseal(key, stored, `calcheck-work|${session}`);
+  }
+
+  // ---------- the results file sent back to the desktop (Check In) ----------
+  // Locked with the check-out file's key, which the desktop kept; the
+  // outside is bound to the inside like the check-out file's.
+  const RESULTS_FORMAT = "calresults";
+
+  function resultsAad(h) {
+    return `${RESULTS_FORMAT}|${VERSION}|${h.session}|${h.results_id}|${h.sent}|${h.sent_by}|${h.entry_count}`;
+  }
+
+  async function sealResults(key, session, sentBy, sentByName, entries, appVersion) {
+    const header = {
+      format: RESULTS_FORMAT, version: VERSION, session, results_id: randomHex(8),
+      sent: new Date().toISOString().replace(/\.\d+Z$/, "Z"), sent_by: sentBy, sent_by_name: sentByName,
+      entry_count: entries.length, app_version: appVersion,
+    };
+    Object.assign(header, await seal(key, { session, results_id: header.results_id, entries }, resultsAad(header)));
+    return JSON.stringify(header, null, 1);
+  }
+
+  return { readHeader, isExpired, open, unlock, reopen, lockWork, unlockWork, sealResults, randomHex };
 })();

@@ -29,7 +29,7 @@ body {
   font: 16px/1.35 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 h1, h2, p { margin: 0; }
 
@@ -123,7 +123,66 @@ h1, h2, p { margin: 0; }
 .result.Custom { background: #eef1f5; color: var(--muted); }
 
 /* ----- bottom tabs ----- */
-.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 2; }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 2; }
 .tab { height: 64px; border: none; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--faint); font-size: 12px; }
 .tab[aria-current="page"] { color: var(--blue); font-weight: 700; }
 .version { text-align: center; color: var(--faint); font-size: 12px; margin: 0 16px 24px; }
+
+/* ----- Stage B: sending, entries, forms ----- */
+.session button + button { margin-left: -4px; }
+.send-strip { display: flex; align-items: center; gap: 8px; width: 100%; border: none; border-top: 1px solid #c9dcf0; background: var(--pale); padding: 10px 16px; font-size: 13px; text-align: left; }
+.send-strip > span:first-child { flex-grow: 1; }
+.send-strip .unsent { color: var(--red-text); }
+.send-link { display: flex; align-items: center; gap: 2px; color: var(--blue); font-weight: 700; }
+.done-mark { color: var(--green-text); }
+.summary { padding: 12px 16px 4px; font-size: 13px; color: var(--muted); }
+.fail-text { color: var(--red-text); font-weight: 600; }
+.muted { color: var(--faint); }
+.entry-row { display: flex; flex-direction: column; gap: 4px; background: var(--card); border-radius: 12px; padding: 12px 14px; border: none; width: 100%; text-align: left; }
+.card.entries { display: flex; flex-direction: column; }
+.card.entries .entry-row { border-radius: 0; border-bottom: 1px solid #eef1f5; }
+.card.entries .entry-row:last-child { border-bottom: none; }
+.entry-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.entry-row .small { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+.tag.unsent { background: var(--amber-bg); color: var(--amber-text); }
+.tag.sent { background: #eef1f5; color: var(--muted); }
+.result.Entry { background: #eef1f5; color: var(--muted); }
+
+.body.with-actions { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.actions { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--line); z-index: 2; }
+.actions.single { grid-template-columns: 1fr; }
+.bar.compact { padding-bottom: 12px; }
+.form-title { display: flex; flex-direction: column; min-width: 0; }
+.form-title h1 { font-size: 19px; }
+.form-title span { font-size: 13px; color: #d6e6f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.field.compact { font-size: 12px; }
+.field input, .field select, .field textarea { min-width: 0; width: 100%; }
+.field textarea { border: 1px solid #c3cbd5; border-radius: 10px; padding: 10px 12px; font-size: 16px; resize: vertical; color: var(--text); }
+.field input[type="date"] { -webkit-appearance: none; appearance: none; }
+.field input.locked { background: #f4f6f9; border-color: transparent; color: var(--text); font-weight: 600; opacity: 1; -webkit-text-fill-color: var(--text); }
+.field input.out { border: 2px solid var(--red); background: var(--red-bg); }
+.small-link { font-size: 13px; padding: 4px 0 0; }
+.range-card { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.range-head { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.out-note { margin: 0; font-size: 13px; color: var(--red-text); }
+.toggle { height: 46px; border-radius: 10px; border: 1px solid #c3cbd5; background: #fff; color: var(--muted); font-size: 15px; font-weight: 700; }
+.toggle.pass[aria-pressed="true"] { border: 2px solid var(--green); background: var(--green-bg); color: var(--green-text); }
+.toggle.fail[aria-pressed="true"] { border: 2px solid var(--red); background: var(--red-bg); color: var(--red-text); }
+.btn.slim { height: 44px; font-size: 14px; }
+.btn.wide { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.quick-list { display: flex; flex-direction: column; gap: 8px; }
+.quick { min-height: 46px; text-align: left; padding: 10px 14px; border-radius: 10px; border: 1px solid #c3cbd5; background: #fff; font-size: 14px; font-weight: 600; }
+.quick[aria-pressed="true"] { border: 2px solid var(--accent); background: var(--pale); }
+.note.warn { background: var(--amber-bg); color: #5c4400; }
+.card.padded { padding: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+.card.padded p { margin: 0; }
+.note-text { padding: 14px; white-space: pre-wrap; font-size: 15px; }
+.stats { padding: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center; }
+.stats div { display: flex; flex-direction: column; gap: 2px; }
+.stats b { font-size: 26px; }
+.stats span { font-size: 13px; color: var(--muted); }
+.center { text-align: center; align-self: center; }
+.link-btn:disabled, .btn:disabled { opacity: .5; }
+.toast { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1f2a37; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 5; max-width: calc(100% - 32px); text-align: center; }

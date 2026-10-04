@@ -2,8 +2,8 @@
 // Raise VERSION whenever a file below changes, so phones pick up the update
 // (the next time they open the app while online). app.js shows the same
 // version on the login screen (APP_VERSION there: keep the two the same).
-const VERSION = "calcheck-a4";
-const FILES = ["./", "index.html", "app.css", "calcheck.js", "dates.js", "app.js", "manifest.webmanifest", "icon-256.png"];
+const VERSION = "calcheck-a5";
+const FILES = ["./", "index.html", "app.css", "calcheck.js", "dates.js", "rules.js", "app.js", "manifest.webmanifest", "icon-256.png"];
 
 // Fresh copies from the site, never the browser's short-term copies (GitHub
 // lets those be reused for 10 minutes, which kept an old app.js before)
