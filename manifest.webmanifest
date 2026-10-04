@@ -1,0 +1,10 @@
+{
+  "name": "Shop Floor Calibrations",
+  "short_name": "Calibrations",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e7ecf2",
+  "theme_color": "#185a91",
+  "icons": [{ "src": "icon-256.png", "sizes": "256x256", "type": "image/png" }]
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Nothing is ever sent anywhere: the page may not connect to any server
+     (connect-src 'none') and loads only its own files. -->
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#185a91">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Calibrations">
+<title>Shop Floor Calibrations</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-256.png">
+<link rel="apple-touch-icon" href="icon-256.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app" aria-live="polite"></div>
+<noscript>This app needs JavaScript switched on.</noscript>
+<script src="calcheck.js"></script>
+<script src="dates.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
