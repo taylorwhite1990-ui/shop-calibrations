@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a7";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a8";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -590,13 +590,25 @@
           : h("p", { class: "empty" }, "Not calibrated yet"))),
       state.expired ? null : h("div", { class: "actions" },
         h("button", { class: "btn secondary", onclick: () => go(`#/custom/${encodeURIComponent(toolId)}`) }, "Custom Entry"),
-        h("button", { class: "btn", onclick: () => {
-          if (!tool.ranges.length) {
-            message.replaceChildren(h("div", { class: "note bad" }, "This tool has no ranges set up, so it can't be calibrated here. Use Custom Entry, or set up its ranges at the desktop."));
-            return window.scrollTo(0, 0);
-          }
-          go(`#/cal/${encodeURIComponent(toolId)}`);
-        } }, "Calibrate"))));
+        calibrateAction(tool, mine, message))));
+  }
+
+  // Calibrate - or, once this device has a calibration for the tool, a green
+  // "Calibration Complete" (so it isn't calibrated twice by mistake). From the
+  // All tab it can be done again, after a check.
+  function calibrateAction(tool, mine, message) {
+    const done = mine.find(e => e.kind === "measurement");
+    if (done && state.tab !== "all")
+      return h("div", { class: "complete", role: "status" }, "✓ Calibration Complete");
+    return h("button", { class: done ? "btn secondary" : "btn", onclick: () => {
+      if (!tool.ranges.length) {
+        message.replaceChildren(h("div", { class: "note bad" }, "This tool has no ranges set up, so it can't be calibrated here. Use Custom Entry, or set up its ranges at the desktop."));
+        return window.scrollTo(0, 0);
+      }
+      if (done && !confirm(`${tool.tool_id} was already calibrated on this device (${done.by_name} at ${timeText(done.saved_at)}).\n\nCalibrate it again?`))
+        return;
+      go(`#/cal/${encodeURIComponent(tool.tool_id)}`);
+    } }, done ? "Calibrate Again" : "Calibrate");
   }
 
   // ---------- Calibrate and Custom Entry (new, or changing one not sent yet) ----------

@@ -191,3 +191,4 @@ h1, h2, p { margin: 0; }
 .brand { display: flex; align-items: center; gap: 16px; }
 .brand-logo { width: 64px; height: 64px; flex-shrink: 0; }
 .hero h1.brand-name { display: flex; flex-direction: column; font-size: 24px; line-height: 1.1; letter-spacing: .01em; }
+.complete { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 52px; padding: 0 8px; border-radius: 12px; background: var(--green-bg); color: var(--green-text); font-size: 15px; font-weight: 700; line-height: 1.2; }
