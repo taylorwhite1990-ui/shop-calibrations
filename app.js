@@ -1,19 +1,18 @@
 // Shop Floor Calibrations: the phone side of Check Out to Phones.
 // Stage A: open a check-out file, log in with a Phone PIN, browse the tools.
-// The file is kept on the phone still locked; what's unlocked lives only in
-// memory and is forgotten on Lock, after IDLE_LOCK_MINUTES away, or on closing.
+// The file is kept on the phone still locked. After the PIN, the inspector
+// stays logged in until midnight (a refresh or reload doesn't ask again);
+// Lock, midnight or the file expiring asks for the PIN again.
 "use strict";
 
 (() => {
   const STORE_FILE = "calcheck.file";        // the locked file, as emailed
   const STORE_USER = "calcheck.lastUser";    // the name picked last time
   const STORE_TRIES = "calcheck.tries";      // wrong PINs in a row, and when
-  const IDLE_LOCK_MINUTES = 10;
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
 
   const app = document.getElementById("app");
-  const state = { header: null, data: null, user: null, tab: "due", search: "", category: "" };
-  let hiddenAt = null;
+  const state = { header: null, data: null, user: null, until: 0, tab: "due", search: "", category: "" };
 
   // ---------- storage (private mode or a full phone can refuse it) ----------
   function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
@@ -77,6 +76,57 @@
     lock();
   }
 
+  // ---------- staying logged in until midnight ----------
+  // The file's key is kept in the browser's own database as a key the
+  // browser can use but never hand out, with who unlocked it and until when.
+  function idb(mode, work) {
+    return new Promise((resolve, reject) => {
+      const open = indexedDB.open("calcheck", 1);
+      open.onupgradeneeded = () => open.result.createObjectStore("login");
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        const tx = db.transaction("login", mode);
+        const request = work(tx.objectStore("login"));
+        tx.oncomplete = () => { db.close(); resolve(request.result); };
+        tx.onerror = tx.onabort = () => { db.close(); reject(tx.error); };
+      };
+    });
+  }
+
+  function midnightTonight() {
+    const d = new Date();
+    d.setHours(24, 0, 0, 0);
+    return d.getTime();
+  }
+
+  function rememberLogin(key) {
+    return idb("readwrite", s => s.put({ key, session: state.header.session, username: state.user.username,
+                                         until: state.until }, "current")).catch(() => { /* asks for the PIN next time */ });
+  }
+
+  function forgetLogin() {
+    return idb("readwrite", s => s.delete("current")).catch(() => { /* nothing kept */ });
+  }
+
+  // Logs back in without the PIN if this file was unlocked earlier today.
+  async function resumeLogin(header) {
+    let saved;
+    try { saved = await idb("readonly", s => s.get("current")); } catch (e) { return false; }
+    const user = saved && header.inspectors.find(i => i.username === saved.username);
+    if (!user || saved.session !== header.session || Date.now() >= saved.until) {
+      if (saved) forgetLogin();
+      return false;
+    }
+    try { state.data = await CalCheck.reopen(header, saved.key); } catch (e) { forgetLogin(); return false; }
+    Object.assign(state, { header, user, until: saved.until });
+    return true;
+  }
+
+  function loggedInTooLong() {
+    return state.data && Date.now() >= state.until;
+  }
+
   function waitLeft() {
     let tries;
     try { tries = JSON.parse(load(STORE_TRIES) || "null"); } catch (e) { tries = null; }
@@ -102,6 +152,7 @@
           if (CalCheck.isExpired(header)) throw new Error(`That file expired on ${Dates.displayMoment(header.expires)}. Ask for a new one.`);
           if (!save(STORE_FILE, text)) throw new Error("The phone wouldn't keep the file (is it in private browsing, or full?).");
           forget(STORE_TRIES);
+          forgetLogin();
           after(null);
         } catch (e) {
           after(e.message);
@@ -156,12 +207,14 @@
       go.disabled = true;
       go.textContent = "Unlocking...";
       try {
-        const data = await CalCheck.open(header, select.value, pin.value);
+        const { data, key } = await CalCheck.unlock(header, select.value, pin.value);
         forget(STORE_TRIES);
         save(STORE_USER, select.value);
         state.header = header;
         state.data = data;
         state.user = header.inspectors.find(i => i.username === select.value);
+        state.until = midnightTonight();
+        await rememberLogin(key);
         if (!location.hash.startsWith("#/")) location.hash = "#/due";
         route();
       } catch (err) {
@@ -194,7 +247,9 @@
   }
 
   function lock() {
+    forgetLogin();
     state.header = state.data = state.user = null;
+    state.until = 0;
     state.search = "";
     state.category = "";
   }
@@ -336,6 +391,10 @@
   // ---------- moving between screens (the phone's back button works) ----------
   function route() {
     if (!state.data) return openScreen();
+    if (loggedInTooLong()) {
+      lock();
+      return openScreen();
+    }
     if (CalCheck.isExpired(state.header)) {
       lock();
       forget(STORE_FILE);
@@ -349,9 +408,7 @@
 
   window.addEventListener("hashchange", route);
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { hiddenAt = Date.now(); return; }
-    if (state.data && hiddenAt && Date.now() - hiddenAt > IDLE_LOCK_MINUTES * 60000) { lock(); openScreen(); }
-    hiddenAt = null;
+    if (!document.hidden && loggedInTooLong()) { lock(); openScreen(); }      // (left open past midnight)
   });
 
   if (!window.crypto || !crypto.subtle) {
@@ -360,5 +417,14 @@
     return;
   }
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { /* still works while online */ });
-  openScreen();
+
+  (async () => {
+    const header = storedHeader();
+    if (header && !CalCheck.isExpired(header) && await resumeLogin(header)) {
+      if (location.hash.startsWith("#/")) route();
+      else location.hash = "#/due";             // (shows it)
+      return;
+    }
+    openScreen();
+  })();
 })();

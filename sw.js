@@ -1,7 +1,7 @@
 // Keeps the app's own files on the phone so it opens with no signal.
 // Raise VERSION whenever a file below changes, so phones pick up the update
 // (the next time they open the app while online).
-const VERSION = "calcheck-a2";
+const VERSION = "calcheck-a3";
 const FILES = ["./", "index.html", "app.css", "calcheck.js", "dates.js", "app.js", "manifest.webmanifest", "icon-256.png"];
 
 self.addEventListener("install", event => {

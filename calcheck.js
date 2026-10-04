@@ -47,6 +47,12 @@ const CalCheck = (() => {
 
   // The tool data, or an Error ("Wrong PIN." etc.).
   async function open(header, username, pin) {
+    return (await unlock(header, username, pin)).data;
+  }
+
+  // { data, key }: the tool data and the file's key, kept so the app can
+  // reopen the file without the PIN (the key can be used, never read out).
+  async function unlock(header, username, pin) {
     const entry = header.inspectors.find(i => i.username === username);
     if (!entry) throw new Error("This file wasn't checked out to you.");
     const wrappingKey = await pinKey(pin, unb64(entry.salt), entry.iterations);
@@ -57,16 +63,21 @@ const CalCheck = (() => {
     } catch (e) {
       throw new Error("Wrong PIN.");
     }
-    const dataKey = await crypto.subtle.importKey("raw", rawKey, "AES-GCM", false, ["decrypt"]);
+    const key = await crypto.subtle.importKey("raw", rawKey, "AES-GCM", false, ["encrypt", "decrypt"]);
+    return { data: await reopen(header, key), key };
+  }
+
+  // The tool data from the file's key (kept from an earlier unlock).
+  async function reopen(header, key) {
     let plain;
     try {
       plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(header.iv), additionalData: dataAad(header) },
-                                          dataKey, unb64(header.data));
+                                          key, unb64(header.data));
     } catch (e) {
       throw new Error("The file has been changed or damaged. Ask for a new one.");
     }
     return JSON.parse(new TextDecoder().decode(plain));
   }
 
-  return { readHeader, isExpired, open };
+  return { readHeader, isExpired, open, unlock, reopen };
 })();
