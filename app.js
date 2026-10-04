@@ -10,6 +10,7 @@
   const STORE_USER = "calcheck.lastUser";    // the name picked last time
   const STORE_TRIES = "calcheck.tries";      // wrong PINs in a row, and when
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
+  const APP_VERSION = "a4";                  // (shown on the login screen; the same as VERSION in sw.js)
 
   const app = document.getElementById("app");
   const state = { header: null, data: null, user: null, until: 0, tab: "due", search: "", category: "" };
@@ -164,6 +165,10 @@
     setTimeout(() => input.remove(), 60000);
   }
 
+  function versionLine() {
+    return h("p", { class: "version" }, `Version ${APP_VERSION}`);
+  }
+
   function openScreen(problem) {
     const header = storedHeader();
     if (header && CalCheck.isExpired(header)) {
@@ -181,7 +186,8 @@
         h("h2", {}, "Open the check-out file you were emailed"),
         h("p", { class: "small" }, "Save the email's attachment to your phone (Files or Downloads) first, then pick it here."),
         h("button", { class: "pick-file", onclick: () => chooseFile(openScreen) }, icon("file", 20), "Choose File"),
-        problem && h("div", { class: "note bad", role: "alert" }, problem))));
+        problem && h("div", { class: "note bad", role: "alert" }, problem)),
+      versionLine()));
   }
 
   function loginScreen(header, problem) {
@@ -242,7 +248,8 @@
     show(h("div", { class: "screen" },
       h("div", { class: "hero" }, icon("tool", 40), h("h1", {}, "Shop Floor Calibrations"),
         h("p", {}, "Log in with your Phone PIN")),
-      form));
+      form,
+      versionLine()));
     (select.value ? pin : select).focus();
   }
 
@@ -416,7 +423,16 @@
       h("div", { class: "panel" }, h("div", { class: "note bad" }, "This browser can't unlock check-out files. Open the app's https:// link in Safari or Chrome."))));
     return;
   }
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { /* still works while online */ });
+  if ("serviceWorker" in navigator) {
+    // An update that arrives while the app is open takes over straight away:
+    // reload once onto it (still logged in, so no PIN)
+    const hadVersion = !!navigator.serviceWorker.controller;
+    let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (hadVersion && !reloading) { reloading = true; location.reload(); }
+    });
+    navigator.serviceWorker.register("sw.js").catch(() => { /* still works while online */ });
+  }
 
   (async () => {
     const header = storedHeader();
