@@ -19,6 +19,19 @@
   --green-text: #17652a;
   --green-bg: #e3f3e7;
   --grey: #9aa3ae;
+  /* Due-date colours (dots, counts, the due card): the PC's Admin Settings >
+     Due Colours, when changed there, replace these (app.js applyDueColours) */
+  --due-red: var(--red);
+  --due-red-text: var(--red-text);
+  --due-red-bg: var(--red-bg);
+  --due-yellow: var(--amber);
+  --due-yellow-text: var(--amber-text);
+  --due-yellow-card-text: #5c4400;
+  --due-yellow-bg: var(--amber-bg);
+  --due-green: var(--green);
+  --due-green-text: var(--green-text);
+  --due-green-bg: var(--green-bg);
+  --due-none: var(--grey);
 }
 
 * { box-sizing: border-box; }
@@ -74,8 +87,8 @@ h1, h2, p { margin: 0; }
 .session button { background: none; border: none; color: var(--blue); font-weight: 700; font-size: 13px; min-height: 36px; padding: 0 8px; }
 .chips { display: flex; gap: 8px; padding: 12px 16px 4px; overflow-x: auto; flex-shrink: 0; }
 .chip { font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
-.chip.red { background: var(--red-bg); color: var(--red-text); }
-.chip.yellow { background: var(--amber-bg); color: var(--amber-text); }
+.chip.red { background: var(--due-red-bg); color: var(--due-red-text); }
+.chip.yellow { background: var(--due-yellow-bg); color: var(--due-yellow-text); }
 .filter { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid #c3cbd5; background: #fff; font-size: 14px; flex-shrink: 0; }
 .filter[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 
@@ -83,17 +96,17 @@ h1, h2, p { margin: 0; }
 .list { flex-grow: 1; padding: 8px 16px 96px; display: flex; flex-direction: column; gap: 8px; }
 .group { margin: 8px 2px 0; font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
 .row { display: flex; align-items: center; gap: 12px; background: var(--card); border-radius: 12px; padding: 12px 14px; min-height: 64px; border: none; width: 100%; text-align: left; }
-.dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: var(--grey); }
-.dot.red { background: var(--red); }
-.dot.yellow { background: var(--amber); }
-.dot.green { background: var(--green); }
+.dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: var(--due-none); }
+.dot.red { background: var(--due-red); }
+.dot.yellow { background: var(--due-yellow); }
+.dot.green { background: var(--due-green); }
 .row-main { display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0; }
 .row-id { font-size: 16px; font-weight: 700; }
 .row-name { font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; font-size: 12px; color: var(--faint); }
 .row-side b { font-size: 13px; }
-.row-side b.red { color: var(--red-text); }
-.row-side b.yellow { color: var(--amber-text); }
+.row-side b.red { color: var(--due-red-text); }
+.row-side b.yellow { color: var(--due-yellow-text); }
 .chev { color: var(--grey); flex-shrink: 0; }
 .empty { text-align: center; color: var(--faint); padding: 40px 16px; }
 
@@ -104,9 +117,9 @@ h1, h2, p { margin: 0; }
 .badge { font-size: 12px; font-weight: 700; background: var(--green-bg); color: var(--green-text); padding: 3px 9px; border-radius: 6px; text-transform: uppercase; }
 .body { padding: 14px 16px 32px; display: flex; flex-direction: column; gap: 12px; }
 .due-card { border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; font-size: 15px; background: #fff; }
-.due-card.red { background: var(--red-bg); color: var(--red-text); }
-.due-card.yellow { background: var(--amber-bg); color: #5c4400; }
-.due-card.green { background: var(--green-bg); color: var(--green-text); }
+.due-card.red { background: var(--due-red-bg); color: var(--due-red-text); }
+.due-card.yellow { background: var(--due-yellow-bg); color: var(--due-yellow-card-text); }
+.due-card.green { background: var(--due-green-bg); color: var(--due-green-text); }
 .card { background: var(--card); border-radius: 12px; }
 .facts { padding: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
 .fact { display: flex; flex-direction: column; gap: 2px; min-width: 0; }

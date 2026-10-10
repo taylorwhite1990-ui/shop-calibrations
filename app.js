@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a8";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a9";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -230,6 +230,7 @@
     }
     try { state.data = await CalCheck.reopen(header, saved.key); } catch (e) { forgetLogin(); return false; }
     Object.assign(state, { header, user, key: saved.key, until: saved.until });
+    applyDueColours();
     await loadWork();
     return true;
   }
@@ -341,6 +342,7 @@
         save(STORE_USER, select.value);
         Object.assign(state, { header, data, key, until: midnightTonight(),
                                user: header.inspectors.find(i => i.username === select.value) });
+        applyDueColours();
         await loadWork();
         await rememberLogin();
         if (!location.hash.startsWith("#/")) location.hash = "#/due";
@@ -381,6 +383,7 @@
 
   function lock() {
     forgetLogin();
+    applyDueColours();          // (back to the built-in colours)
     Object.assign(state, { header: null, data: null, user: null, key: null, work: null, until: 0, expired: false,
                            search: "", category: "", formHash: null, formDirty: false });
   }
@@ -395,6 +398,21 @@
   // ---------- the tools ----------
   function rules() {
     return state.data.due_rules || { overdue_after: 14, due_soon: 14 };
+  }
+
+  // The PC's due-date colours (Admin Settings > Due Colours), when changed
+  // from the built-in ones: { red: { dot, text, bg }, ... }. See app.css.
+  function applyDueColours() {
+    const root = document.documentElement.style;
+    const colours = (state.data && state.data.due_colours) || {};
+    for (const sev of ["red", "yellow", "green", "none"]) {
+      const c = colours[sev];
+      const set = (name, value) => value ? root.setProperty(name, value) : root.removeProperty(name);
+      set(`--due-${sev}`, c && c.dot);
+      set(`--due-${sev}-text`, c && c.text);
+      set(`--due-${sev}-bg`, c && c.bg);
+      if (sev === "yellow") set("--due-yellow-card-text", c && c.text);
+    }
   }
 
   function matches(tool) {
