@@ -296,6 +296,7 @@ h1, h2, p { margin: 0; }
 
 /* ----- the Display choice (open and login screens) ----- */
 .display-line { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 16px 14px; font-size: 13px; color: var(--faint); }
+.display-note { margin: -6px 24px 14px; text-align: center; font-size: 12px; color: var(--faint); }
 .seg { display: inline-flex; background: var(--soft2); border-radius: 10px; padding: 3px; gap: 2px; }
 .seg button { border: none; background: none; border-radius: 8px; padding: 0 12px; height: 38px; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .seg button[aria-pressed="true"] { background: var(--card); color: var(--text); font-weight: 700; box-shadow: 0 1px 3px rgba(0, 0, 0, .14); }

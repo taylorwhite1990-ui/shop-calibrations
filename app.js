@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a13";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a14";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -302,7 +302,12 @@
         icon(c, 16), Theme.LABELS[c])));
     }
     fill();
-    return h("div", { class: "display-line" }, h("span", {}, "Display"), box);
+    // Samsung Internet's own Dark mode darkens every site, whatever is chosen
+    // here (the page can't stop it): say so, in that browser only
+    const samsung = /SamsungBrowser/i.test(navigator.userAgent);
+    return [h("div", { class: "display-line" }, h("span", {}, "Display"), box),
+            samsung ? h("p", { class: "display-note" },
+              "Using Samsung Internet? Turn off its own Dark mode (menu ☰) so this setting works.") : null];
   }
 
   // In the top bar once logged in: tap to switch
