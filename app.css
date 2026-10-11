@@ -240,7 +240,7 @@ h1, h2, p { margin: 0; }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (prefers-reduced-motion: reduce) { *, .toast { transition: none !important; animation: none !important; } }
 
-/* ----- dark mode (Display: Dark, or Match phone on a phone in dark mode; theme.js) ----- */
+/* ----- dark mode (Display: Dark; theme.js) ----- */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --blue: #12416a;
@@ -288,8 +288,8 @@ h1, h2, p { margin: 0; }
 :root[data-theme="dark"] .card.entries .entry-row:last-child { border-bottom: none; }
 
 /* A phone in dark mode: the page answers it itself (so the browser's own
-   website darkening leaves it alone), keeping Light light unless Dark or
-   Match phone is chosen (theme.js sets data-theme) */
+   website darkening leaves it alone), keeping Light light unless Dark is
+   chosen (theme.js sets data-theme) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="dark"]) { color-scheme: only light; }
 }

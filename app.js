@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a12";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a13";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -60,7 +60,6 @@
     mail: ["M3 5h18v14H3z", "M3 7l9 6 9-6"],
     light: ["M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8", "M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"],
     dark: ["M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"],
-    auto: ["M8 2h8a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z", "M11 18h2"],
   };
   function icon(name, size = 22) {
     const ns = "http://www.w3.org/2000/svg";
@@ -293,8 +292,8 @@
       subtitle ? h("p", {}, subtitle) : null);
   }
 
-  // ---------- Display: Light / Dark / Match phone (theme.js) ----------
-  // On the open and login screens: all three to pick from
+  // ---------- Display: Light / Dark (theme.js) ----------
+  // On the open and login screens: both to pick from
   function displayPicker() {
     const box = h("div", { class: "seg", role: "group", "aria-label": "Display" });
     function fill() {
@@ -306,7 +305,7 @@
     return h("div", { class: "display-line" }, h("span", {}, "Display"), box);
   }
 
-  // In the top bar once logged in: tap to go to the next one
+  // In the top bar once logged in: tap to switch
   function displayButton() {
     const button = h("button", { class: "icon-btn" });
     function showChoice() {
