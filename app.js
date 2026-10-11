@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a11";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a12";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");

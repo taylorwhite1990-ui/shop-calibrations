@@ -1,5 +1,5 @@
 :root {
-  color-scheme: only light;      /* (stops a dark-mode phone darkening the light look itself) */
+  color-scheme: only light;      /* (native controls light; with the block below, stops phones darkening Light) */
   --blue: #185a91;
   --blue-dark: #12497a;
   --accent: #1f6fb2;
@@ -247,12 +247,12 @@ h1, h2, p { margin: 0; }
   --blue-dark: #0d3254;
   --accent: #2f80c8;
   --pale: #17314b;
-  --ground: #0e151d;
-  --card: #18222d;
+  --ground: #0b1118;
+  --card: #1b2632;
   --text: #e7edf3;
   --muted: #b2bdc9;
   --faint: #8e9aa7;
-  --line: #2b3948;
+  --line: #34445a;
   --red: #e05a4b;
   --red-text: #ff9b8f;
   --red-bg: #3a1c1a;
@@ -264,7 +264,7 @@ h1, h2, p { margin: 0; }
   --green-bg: #163222;
   --grey: #6d7884;
   --due-yellow-card-text: #f1c94f;
-  --surface: #223041;
+  --surface: #243344;
   --input-line: #3a4a5c;
   --soft: #1c2835;
   --soft2: #263342;
@@ -280,6 +280,19 @@ h1, h2, p { margin: 0; }
 :root[data-theme="dark"] .row, :root[data-theme="dark"] .card, :root[data-theme="dark"] .due-card,
 :root[data-theme="dark"] .entry-row { box-shadow: none; }
 :root[data-theme="dark"] .tabs, :root[data-theme="dark"] .actions { box-shadow: 0 -1px 0 var(--line); }
+
+/* Dark mode: each box outlined, so it stands out from the background */
+:root[data-theme="dark"] .row, :root[data-theme="dark"] .card, :root[data-theme="dark"] .due-card,
+:root[data-theme="dark"] .entry-row, :root[data-theme="dark"] .panel { border: 1px solid var(--line); }
+:root[data-theme="dark"] .card.entries .entry-row { border: none; border-bottom: 1px solid var(--line); }
+:root[data-theme="dark"] .card.entries .entry-row:last-child { border-bottom: none; }
+
+/* A phone in dark mode: the page answers it itself (so the browser's own
+   website darkening leaves it alone), keeping Light light unless Dark or
+   Match phone is chosen (theme.js sets data-theme) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="dark"]) { color-scheme: only light; }
+}
 
 /* ----- the Display choice (open and login screens) ----- */
 .display-line { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 16px 14px; font-size: 13px; color: var(--faint); }

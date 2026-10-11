@@ -2,6 +2,12 @@
 // phone. Loaded in <head>, so the page is drawn in the right colours from the
 // start. The choice is kept on this device (it isn't secret, so it's kept
 // before any PIN). See app.css :root[data-theme="dark"].
+//
+// Phones' own "dark mode for websites" (Chrome's Darken websites, Samsung
+// Internet's dark mode, ...) would otherwise darken the Light look too. They
+// leave a page alone when it says it has its own dark design: index.html's
+// color-scheme meta (always "light dark") and app.css's prefers-color-scheme
+// block say so, whatever is chosen here.
 "use strict";
 
 const Theme = (() => {
@@ -20,9 +26,6 @@ const Theme = (() => {
     const c = choice();
     const dark = c === "dark" || (c === "auto" && !!phoneDark && phoneDark.matches);
     document.documentElement.dataset.theme = dark ? "dark" : "light";
-    // "only light" also stops a phone in dark mode darkening the light look itself
-    const meta = document.querySelector('meta[name="color-scheme"]');
-    if (meta) meta.content = dark ? "dark" : "only light";
   }
 
   function set(c) {
