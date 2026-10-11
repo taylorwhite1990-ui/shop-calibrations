@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a9";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a11";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -58,6 +58,9 @@
     done: ["M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18", "M8 12.5l2.5 2.5L16 9.5"],
     grid: ["M4 4h7v7H4z", "M13 4h7v7h-7z", "M4 13h7v7H4z", "M13 13h7v7h-7z"],
     mail: ["M3 5h18v14H3z", "M3 7l9 6 9-6"],
+    light: ["M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8", "M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"],
+    dark: ["M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"],
+    auto: ["M8 2h8a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z", "M11 18h2"],
   };
   function icon(name, size = 22) {
     const ns = "http://www.w3.org/2000/svg";
@@ -290,6 +293,37 @@
       subtitle ? h("p", {}, subtitle) : null);
   }
 
+  // ---------- Display: Light / Dark / Match phone (theme.js) ----------
+  // On the open and login screens: all three to pick from
+  function displayPicker() {
+    const box = h("div", { class: "seg", role: "group", "aria-label": "Display" });
+    function fill() {
+      box.replaceChildren(...Theme.CHOICES.map(c => h("button", {
+        type: "button", "aria-pressed": String(Theme.choice() === c), onclick: () => { Theme.set(c); fill(); } },
+        icon(c, 16), Theme.LABELS[c])));
+    }
+    fill();
+    return h("div", { class: "display-line" }, h("span", {}, "Display"), box);
+  }
+
+  // In the top bar once logged in: tap to go to the next one
+  function displayButton() {
+    const button = h("button", { class: "icon-btn" });
+    function showChoice() {
+      const c = Theme.choice();
+      button.replaceChildren(icon(c, 20));
+      button.setAttribute("aria-label", `Display: ${Theme.LABELS[c]} (tap to change)`);
+    }
+    button.addEventListener("click", () => {
+      const next = Theme.CHOICES[(Theme.CHOICES.indexOf(Theme.choice()) + 1) % Theme.CHOICES.length];
+      Theme.set(next);
+      showChoice();
+      toast(`Display: ${Theme.LABELS[next]}`);
+    });
+    showChoice();
+    return button;
+  }
+
   function versionLine() {
     return h("p", { class: "version" }, `Version ${APP_VERSION}`);
   }
@@ -309,6 +343,7 @@
         h("p", { class: "small" }, "Save the email's attachment to your device (Files or Downloads) first, then pick it here."),
         h("button", { class: "pick-file", onclick: () => chooseFile(openScreen) }, icon("file", 20), "Choose File"),
         problem && h("div", { class: "note bad", role: "alert" }, problem)),
+      displayPicker(),
       versionLine()));
   }
 
@@ -377,6 +412,7 @@
     show(h("div", { class: "screen" },
       brandHero("Log in with your Mobile PIN"),
       form,
+      displayPicker(),
       versionLine()));
     (select.value ? pin : select).focus();
   }
@@ -484,7 +520,7 @@
     }
     fill();
     show(h("div", { class: "screen" },
-      h("header", { class: "bar" }, h("div", { class: "bar-row" }, h("h1", {}, "Calibrations Due")),
+      h("header", { class: "bar" }, h("div", { class: "bar-row" }, h("h1", {}, "Calibrations Due"), displayButton()),
         searchBox("Search tool ID or description", fill)),
       sessionStrip(), chips, list, tabBar()));
   }
@@ -514,7 +550,7 @@
     }
     fill();
     show(h("div", { class: "screen" },
-      h("header", { class: "bar" }, h("div", { class: "bar-row" }, h("h1", {}, "All Tools")),
+      h("header", { class: "bar" }, h("div", { class: "bar-row" }, h("h1", {}, "All Tools"), displayButton()),
         searchBox(`Search the ${state.data.tools.length} checked-out tools`, fill)),
       sessionStrip(), filters, list, tabBar()));
   }
@@ -552,7 +588,7 @@
     }
     fill();
     show(h("div", { class: "screen" },
-      h("header", { class: "bar" }, h("div", { class: "bar-row" }, h("h1", {}, "Completed")),
+      h("header", { class: "bar" }, h("div", { class: "bar-row" }, h("h1", {}, "Completed"), displayButton()),
         searchBox("Search tool or inspector", fill)),
       sessionStrip(), summary, list, tabBar()));
   }
@@ -765,6 +801,7 @@
       checkTolerance();
 
       const card = h("section", { class: "card range-card" },
+        rows.length > 1 ? h("span", { class: "range-num" }, `Range ${i + 1} of ${rows.length}`) : null,
         h("div", { class: "range-head" }, h("label", { class: "field compact" }, "Range", rangeIn),
           h("label", { class: "field compact" }, "Standard used", stdIn)),
         h("div", { class: "pair" }, h("label", { class: "field" }, "As Found", found), h("label", { class: "field" }, "After Adj.", adj)),
