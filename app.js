@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a14";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a15";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -78,6 +78,11 @@
   function show(...children) {
     app.replaceChildren(...children);
     window.scrollTo(0, 0);
+  }
+
+  // 'Type at least 3 decimal places (e.g. 2.000)' for a reading shorter than its range
+  function shortHint(range, needed) {
+    return `Type at least ${needed} decimal place${needed === 1 ? "" : "s"} (e.g. ${Rules.parseMeasurement(range).toFixed(needed)})`;
   }
 
   function toast(text) {
@@ -752,6 +757,7 @@
       const adj = h("input", { type: "text", inputmode: numeric ? "decimal" : "text", value: row.after_adj, autocomplete: "off" });
       const remarks = h("input", { type: "text", value: row.remarks, autocomplete: "off" });
       const outNote = h("p", { class: "out-note" }, `Outside the Acceptable Deviation (${tool.deviation})`);
+      const shortNote = h("p", { class: "out-note" });     // (a reading with fewer decimal places than the range)
       const pass = h("button", { type: "button", class: "toggle pass" }, "Pass");
       const fail = h("button", { type: "button", class: "toggle fail" }, "Fail");
 
@@ -792,6 +798,14 @@
           return bad;
         });
         outNote.hidden = !out.some(Boolean);
+        // Range 2.000": 2.00 could hide 2.002, so it's outlined until typed to the range's decimals
+        const needed = [found, adj].map(box => {
+          const n = Rules.readingTooShort(rangeIn.value, box.value);
+          if (n) box.classList.add("out");
+          return n;
+        }).find(Boolean);
+        shortNote.hidden = !needed;
+        if (needed) shortNote.textContent = shortHint(rangeIn.value, needed);
       }
 
       pass.addEventListener("click", () => choose("pass"));
@@ -809,7 +823,7 @@
         h("div", { class: "range-head" }, h("label", { class: "field compact" }, "Range", rangeIn),
           h("label", { class: "field compact" }, "Standard used", stdIn)),
         h("div", { class: "pair" }, h("label", { class: "field" }, "As Found", found), h("label", { class: "field" }, "After Adj.", adj)),
-        outNote,
+        outNote, shortNote,
         h("div", { class: "pair", role: "group", "aria-label": `Result for ${row.range || `range ${i + 1}`}` }, pass, fail),
         h("label", { class: "field" }, "Remarks", remarks));
       return { row, card, rangeIn, stdIn, found, adj, remarks, saved, choose };
@@ -835,6 +849,11 @@
       const never = Rules.intervalIsNever(tool.interval);
       if (!(never && !due.input.value) && !Rules.parseIso(due.input.value)) return formError(errors, "Enter the next due date.");
       if (unlocked && cards.some(c => !c.rangeIn.value.trim())) return formError(errors, "Range can't be left blank.");
+      const short = cards.flatMap(c => [[c.found, "As Found"], [c.adj, "After Adj."]].map(([box, name]) => {
+        const n = box.value !== c.saved[box === c.found ? "as_found" : "after_adj"] && Rules.readingTooShort(c.rangeIn.value, box.value);
+        return n ? `Range ${c.rangeIn.value.trim()}: ${name} – ${shortHint(c.rangeIn.value, n)}` : null;
+      })).filter(Boolean);
+      if (short.length) return formError(errors, short.join(" · "));
       if (cards.some(c => !["pass", "fail"].includes(c.row.result))) return formError(errors, "Tick Pass or Fail for every range before saving.");
       const mismatches = cards.map(c => {
         const [lead] = Rules.splitLeadingResult(c.remarks.value);

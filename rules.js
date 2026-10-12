@@ -29,9 +29,26 @@ const Rules = (() => {
 
   // The automatic Pass / Fail for a range: the After Adj. reading decides when
   // there is one (the tool was adjusted to read correctly), else the As Found
+  // (and none while that reading has fewer decimal places than the range)
   function calibrationResult(nominalText, asFoundText, afterAdjText, deviation) {
-    if (parseMeasurement(afterAdjText) !== null) return toleranceResult(nominalText, afterAdjText, deviation);
-    return toleranceResult(nominalText, asFoundText, deviation);
+    const reading = parseMeasurement(afterAdjText) !== null ? afterAdjText : asFoundText;
+    if (readingTooShort(nominalText, reading)) return null;
+    return toleranceResult(nominalText, reading, deviation);
+  }
+
+  // '2.000"' -> 3, '2.0' -> 1, '2' -> 0; null if it isn't one number
+  function decimalPlaces(text) {
+    if (parseMeasurement(text) === null) return null;
+    const m = /\.(\d*)/.exec(text);
+    return m ? m[1].length : 0;
+  }
+
+  // The decimal places a reading needs when it has fewer than its range
+  // (range 2.000": '2.00' -> 3); null when it's fine. More is always fine;
+  // N/A, text and '0" - 1"' ranges aren't checked
+  function readingTooShort(nominalText, readingText) {
+    const needed = decimalPlaces(nominalText), typed = decimalPlaces(readingText);
+    return needed !== null && typed !== null && typed < needed ? needed : null;
   }
 
   function outOfTolerance(nominalText, readingText, deviation) {
@@ -114,6 +131,6 @@ const Rules = (() => {
     return iso(new Date());
   }
 
-  return { parseMeasurement, parseDeviation, toleranceResult, calibrationResult, outOfTolerance, addInchMark, splitLeadingResult,
+  return { parseMeasurement, parseDeviation, toleranceResult, calibrationResult, decimalPlaces, readingTooShort, outOfTolerance, addInchMark, splitLeadingResult,
            remarksForResult, intervalIsNever, dueFromInterval, parseIso, today };
 })();
