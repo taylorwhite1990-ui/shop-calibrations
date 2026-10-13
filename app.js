@@ -19,7 +19,7 @@
   const STORE_WORK = "calcheck.work";        // the entries made here (locked)
   const STORE_WORK_INFO = "calcheck.workInfo";   // just {session, total, unsent}: readable before the PIN
   const FREE_TRIES = 5, WAIT_SECONDS = 60;
-  const APP_VERSION = "a15";                  // (shown on the login screen; the same as VERSION in sw.js)
+  const APP_VERSION = "a16";                  // (shown on the login screen; the same as VERSION in sw.js)
   const STATUSES = ["Active", "Reference Only", "Damaged", "Removed from Service"];
 
   const app = document.getElementById("app");
@@ -849,12 +849,13 @@
       const never = Rules.intervalIsNever(tool.interval);
       if (!(never && !due.input.value) && !Rules.parseIso(due.input.value)) return formError(errors, "Enter the next due date.");
       if (unlocked && cards.some(c => !c.rangeIn.value.trim())) return formError(errors, "Range can't be left blank.");
+      if (cards.some(c => !["pass", "fail"].includes(c.row.result))) return formError(errors, "Tick Pass or Fail for every range before saving.");
+      // (a warning: a reading shorter than the range can be saved anyway)
       const short = cards.flatMap(c => [[c.found, "As Found"], [c.adj, "After Adj."]].map(([box, name]) => {
         const n = box.value !== c.saved[box === c.found ? "as_found" : "after_adj"] && Rules.readingTooShort(c.rangeIn.value, box.value);
         return n ? `Range ${c.rangeIn.value.trim()}: ${name} – ${shortHint(c.rangeIn.value, n)}` : null;
       })).filter(Boolean);
-      if (short.length) return formError(errors, short.join(" · "));
-      if (cards.some(c => !["pass", "fail"].includes(c.row.result))) return formError(errors, "Tick Pass or Fail for every range before saving.");
+      if (short.length && !confirm(`${short.join("\n")}\n\nSave anyway?`)) return;
       const mismatches = cards.map(c => {
         const [lead] = Rules.splitLeadingResult(c.remarks.value);
         return lead && lead !== c.row.result
